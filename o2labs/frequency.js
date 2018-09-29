@@ -9,12 +9,12 @@ const MAX_SLOT_AVIALABLE_HOUR_DURATION = 3600
 
 var data = {
     assets: {
-        "mediaId1": 10,
-        "mediaId2": 100,
-        "mediaId3": 150,
+        "mediaId1": 50,
+        //"mediaId2": 150,
+        //"mediaId3": 150,
     },
     startDate:"2018-10-21",
-    endDate: "2018-10-23",
+    endDate: "2018-12-23",
     hours: [1, 4, 5, 6]
 }
 const assetsLength = _.sum(Object.values(data.assets))
@@ -23,7 +23,8 @@ try {
     if (assetsLength > MAX_ASSETS_LENGTH) {
         throw new Error("Assets length should not be greater than 360")
     }
-    let preSchedule = [
+	//let preSchedule = [];
+	let preSchedule = [
 		{
 	    	date: "2018-10-21",
 	        play: {
@@ -31,133 +32,17 @@ try {
 		            1: [ // slot max duration 360 seconds
 		                {
 		                    mediaId: "mediaId4",
-		                    duration: 60
-		                },
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 300
+		                    duration: 70
 		                }
-		            ],
-		            2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            3: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            4: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 100
-		                }
-		            ],
-		            5: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            6: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            7: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            8: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            9: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            10: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
+		            ]
 		        },
-		        5: { // hour
-		            1: [ // slot max duration 360 seconds
+		        5: {
+		            1: [ 
 		                {
 		                    mediaId: "mediaId4",
-		                    duration: 60
-		                },
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 300
+		                    duration: 10
 		                }
-		            ],
-		            2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            3: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            4: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 100
-		                }
-		            ],
-		            5: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            6: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            7: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            8: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            9: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            10: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
+		            ]
 		        }
 		    }
 		},
@@ -165,14 +50,10 @@ try {
 	    	date: "2018-10-23",
 	        play: {
 	        	6: {
-	        		1: [ // slot max duration 360 seconds
+	        		1: [ 
 		                {
 		                    mediaId: "mediaId4",
-		                    duration: 60
-		                },
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 300
+		                    duration: 10
 		                }
 		            ]
 	        	}
@@ -187,49 +68,50 @@ try {
     	formattedPreSchedule[ps.date] = ps.play;
     })
 
-    var a = moment(data.startDate);
-	var b = moment(data.endDate);
+	let startDate = moment(data.startDate);
+	let endDate = moment(data.endDate);
+	
+	let defaultFrequency = Math.floor(MAX_SLOT_DURATION / assetsLength);
 
-    for (let m = moment(a); m.diff(b, 'days') <= 0; m.add(1, 'days')) {
+    for (let m = moment(startDate); m.diff(endDate, 'days') <= 0; m.add(1, 'days')) {
 	  let cDate = m.format('YYYY-MM-DD');
-	  getAvailableSlotsForADate(cDate)
+	  getAvailableSlotsByDate(cDate)
 	}
 
-	function getAvailableSlotsForADate(date) {
+	function getAvailableSlotsByDate(date) {
 		let availableSlots = {};
     	let schedule = formattedPreSchedule[date];
-    	frequencyByDate[date] = 0;
-		if(schedule) {
+    	if(!schedule) {
+			frequencyByDate[date] = defaultFrequency * MAX_SLOTS_IN_AN_HOUR;
+		} else {
+			let frequencyByHour = {};
 			data.hours.map(h => {
-		        schedule[h] = schedule[h] || {};
-		        availableSlots[h] = [];
-		        for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
-		            const slot = schedule[h][i] || [];
-		            let pushAsset = true;
-		            if (slot.length > 0) {
-		                const sc_h_slot_duration = _.sumBy(slot, 'duration');
-
-		                if (sc_h_slot_duration >= MAX_SLOT_DURATION) {
-		                    pushAsset = false;
-		                } else {
-		                    const sc_h_slot_remaining_duration = MAX_SLOT_DURATION - sc_h_slot_duration;
-		                    if(sc_h_slot_remaining_duration < assetsLength) {
-		                        pushAsset = false;
-		                    }
-		                }
-		            }
-		            if (pushAsset) {
-		                availableSlots[h].push(i)
-		            }
-		        }
-		    })
-		    console.log({[`Slots Available for ${date}`]: availableSlots})
-		}
-		else {
-			console.log(`All slots available in ${date}`)
-			frequencyByDate[date] = 10;
+				if(!schedule[h]) {
+					frequencyByHour[h] = defaultFrequency;
+				} else {
+					let frequencyBySlot = {};
+					for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
+						if(schedule[h][i]) {
+							const sc_h_slot_duration = _.sumBy(schedule[h][i], 'duration');
+							const sc_h_slot_available_duration = MAX_SLOT_DURATION - sc_h_slot_duration;
+							if (assetsLength > sc_h_slot_available_duration) {
+								frequencyBySlot[i] = 0;
+							} else {
+								frequencyBySlot[i] = Math.floor(sc_h_slot_available_duration / assetsLength);
+							}
+						} else {
+							frequencyBySlot[i] = defaultFrequency;
+						}
+					}
+					//console.log({[`${date}: Hour :${h}`]: frequencyBySlot})
+					frequencyByHour[h] = _.min(Object.values(frequencyBySlot))
+				}
+			});
+			console.log({[`${date}`]: frequencyByHour})
+			frequencyByDate[date] = _.min(Object.values(frequencyByHour)) * MAX_SLOTS_IN_AN_HOUR;
 		}
 	}
+	console.log({frequencyByDate})
 
     
 }catch(e) {
