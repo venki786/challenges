@@ -124,18 +124,16 @@ try {
                 
                 Object.keys(vReq).reverse().map((slot) => {
                     const slotData = vReq[slot]
-                    slotData.filter((d, index) => {
-                        if(mediaIds.includes(d.mediaId) && campaign.assets[d.mediaId] === d.duration) {
-                            return false
-                        }
-                        return true;
-                    })
+                    let vkslot = slotData.filter((d, index) => !(mediaIds.includes(d.mediaId) && campaign.assets[d.mediaId] === d.duration))
+                    if(vkslot.length > 0)
+                    	vt[slot] = vkslot;
                 })
             }
+            fPreSchedule[cDate][h] = {...vt};
         })
     }
 
-    console.log(fPreSchedule["2018-10-21"]["4"]["1"])
+    console.log(fPreSchedule["2018-10-21"]["4"])
 
 } catch(e) {
     console.log(e)
