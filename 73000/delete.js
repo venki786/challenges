@@ -13,55 +13,14 @@ var campaign = {
         //"mediaId2": 150,
         //"mediaId3": 150,
     },
-    startDate: "2018-10-21",
+    startDate: "2018-10-22",
     endDate: "2018-10-22",
     hours: [4, 5],
-    frequency: 2
+    frequency: 1
 }
 
 try {
     let preSchedule = [ // Retrieved this data based in schedule where screens in [1,2,3] and date between startDate & endDate
-		{
-			date: "2018-10-21",
-			play: {
-		        4: { // hour
-		            1: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId1",
-		                    duration: 10
-		                },
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 300
-		                }
-                    ],
-                    2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId1",
-		                    duration: 10
-		                }
-		            ]
-		        },
-		        5: { // hour
-		            1: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 70
-                        },
-                        {
-		                    mediaId: "mediaId1",
-		                    duration: 10
-		                },
-                    ],
-                    2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId1",
-		                    duration: 10
-		                }
-		            ]
-		        }
-		    }
-		},
 		{
 			date: "2018-10-22",
 			play: {
@@ -74,10 +33,18 @@ try {
 		                {
 		                    mediaId: "mediaId5",
 		                    duration: 300
+						},
+						{
+		                    mediaId: "mediaId1",
+		                    duration: 10
 		                }
                     ],
                     2: [ // slot max duration 360 seconds
 		                {
+		                    mediaId: "mediaId1",
+		                    duration: 10
+						},
+						{
 		                    mediaId: "mediaId1",
 		                    duration: 10
 		                }
@@ -108,8 +75,6 @@ try {
         fPreSchedule[ps.date] = ps.play 
     })
 
-    let arrageCampaignSchedules = {}
-    
     let mediaIds = Object.keys(campaign.assets);
 
     let startDate = moment(campaign.startDate);
@@ -123,8 +88,15 @@ try {
             for(let i = campaign.frequency;i > 0; i--){
                 
                 Object.keys(vReq).reverse().map((slot) => {
-                    const slotData = vReq[slot]
-                    let vkslot = slotData.filter((d, index) => !(mediaIds.includes(d.mediaId) && campaign.assets[d.mediaId] === d.duration))
+					const slotData = vReq[slot]
+					let found = false;
+                    let vkslot = slotData.filter((d, index) => {
+						if(!found && mediaIds.includes(d.mediaId) && campaign.assets[d.mediaId] === d.duration){
+							found = true;
+							return false;
+						}
+						return true;
+					})
                     if(vkslot.length > 0)
                     	vt[slot] = vkslot;
                 })
@@ -133,7 +105,7 @@ try {
         })
     }
 
-    console.log(fPreSchedule["2018-10-21"]["4"])
+    console.log(fPreSchedule["2018-10-22"])
 
 } catch(e) {
     console.log(e)
