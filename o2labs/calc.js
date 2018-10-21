@@ -1,4 +1,79 @@
 const _ = require('lodash')
+const MAX_SLOTS_IN_AN_HOUR = 10 // will get change depends on MAX_SLOT_DURATION
+
+var v = [
+    {
+        date: "2018-10-21",
+        screenId: 1,
+        play: {
+            5: { // hour
+                1: [ // slot max duration 360 seconds
+                    {
+                        mediaId: "mediaId5",
+                        duration: 60
+                    }
+                ]
+            },
+            6: { // hour
+                1: [ // slot max duration 360 seconds
+                    {
+                        mediaId: "mediaId5",
+                        duration: 60
+                    }
+                ]
+            }
+        }
+    },
+    {
+        date: "2018-10-21",
+        screenId: 2,
+        play: {
+            5: {
+                1: [ // slot max duration 360 seconds
+                    {
+                        mediaId: "mediaId4",
+                        duration: 70
+                    }
+                ]
+            }
+        }
+    }
+]
+function regeneratePreSchedule () {
+    var preSc = {}
+    v.map(sc => {
+        const scPlay = {...sc.play}
+        if(preSc[sc.date]){
+            const dup = {...preSc[sc.date]};
+            const ks = _.uniq([...Object.keys(dup), ...Object.keys(sc.play)]);
+            console.log({ks})
+            ks.map(k => {
+                if(dup[k] && scPlay[k]) {
+                    const dupDuration = getHourDuration(dup[k])
+                    const sc_h_Duration = getHourDuration(scPlay[k])
+                    scPlay[k] = dupDuration > sc_h_Duration ? {...dup[k]} : {...scPlay[k]};
+                } else if(!scPlay[k] && dup[k]) {
+                    scPlay[k] = {...dup[k]}
+                }
+            })
+        }
+        preSc[sc.date] = scPlay    
+    })
+    return preSc;
+}
+
+function getHourDuration(hour) {
+    let hour_duration = 0;
+    for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
+        const slot = hour[i] || [];
+        if (slot.length > 0) {
+            hour_duration  += _.sumBy(slot, 'duration')
+        }
+    }
+    return hour_duration;
+}
+return;
+
 const MAX_ASSETS_LENGTH = 160; // in seconds
 var v = { '1': [ { mediaId: 'mediaId4', duration: 50 } ],
 '2': [ { mediaId: 'mediaId4', duration: 50 } ],

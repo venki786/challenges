@@ -9,13 +9,15 @@ const MAX_SLOT_AVIALABLE_HOUR_DURATION = 3600
 
 var data = {
     startDate:"2018-10-21",
-    endDate: "2018-10-23"
+	endDate: "2018-10-23",
+	screens: [ 1, 2, 3 ]
 }
 
 try {
-	let preSchedule = [
+	let preSchedule = [ // Retrieved this data based in schedule where screens in [1,2,3] and date between startDate & endDate
 		{
-	    	date: "2018-10-21",
+			date: "2018-10-21",
+			screenId: 1,
 	        play: {
 		        4: { // hour
 		            1: [ // slot max duration 360 seconds
@@ -27,155 +29,69 @@ try {
 		                    mediaId: "mediaId5",
 		                    duration: 300
 		                }
-		            ],
-		            2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            3: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            4: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 100
-		                }
-		            ],
-		            5: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            6: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            7: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            8: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            9: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            10: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
+		            ]
 		        },
 		        5: { // hour
 		            1: [ // slot max duration 360 seconds
 		                {
-		                    mediaId: "mediaId4",
-		                    duration: 60
-		                },
-		                {
 		                    mediaId: "mediaId5",
-		                    duration: 300
+		                    duration: 10
 		                }
-		            ],
-		            2: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            3: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            4: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 100
-		                }
-		            ],
-		            5: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            6: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            7: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            8: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            9: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
-		            10: [ // slot max duration 360 seconds
-		                {
-		                    mediaId: "mediaId4",
-		                    duration: 160
-		                }
-		            ],
+		            ]
 		        }
 		    }
 		},
 		{
-	    	date: "2018-10-23",
+			date: "2018-10-21",
+			screenId: 2,
 	        play: {
-	        	6: {
+	        	5: {
 	        		1: [ // slot max duration 360 seconds
 		                {
 		                    mediaId: "mediaId4",
 		                    duration: 60
-		                },
-		                {
-		                    mediaId: "mediaId5",
-		                    duration: 300
 		                }
 		            ]
 	        	}
 	        }
 	    }
-    ]
-    
-    let formattedPreSchedule = {}
-    
-    preSchedule.map(ps => {
-    	formattedPreSchedule[ps.date] = ps.play;
-    })
+	]
 
+	function regeneratePreSchedule (v) {
+		var preSc = {}
+		v.map(sc => {
+			const scPlay = {...sc.play}
+			if(preSc[sc.date]){
+				const dup = {...preSc[sc.date]};
+				const ks = _.uniq([...Object.keys(dup), ...Object.keys(sc.play)]);
+				ks.map(k => {
+					if(dup[k] && scPlay[k]) {
+						const dupDuration = getHourDuration(dup[k])
+						const sc_h_Duration = getHourDuration(scPlay[k])
+						scPlay[k] = dupDuration > sc_h_Duration ? {...dup[k]} : {...scPlay[k]};
+					} else if(!scPlay[k] && dup[k]) {
+						scPlay[k] = {...dup[k]}
+					}
+				})
+			}
+			preSc[sc.date] = scPlay    
+		})
+		return preSc;
+	}
+	
+	function getHourDuration(hour) {
+		let hour_duration = 0;
+		for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
+			const slot = hour[i] || [];
+			if (slot.length > 0) {
+				hour_duration  += _.sumBy(slot, 'duration')
+			}
+		}
+		return hour_duration;
+	}
+
+    let formattedPreSchedule = regeneratePreSchedule(preSchedule);
+	
     let startDate = moment(data.startDate);
 	let endDate = moment(data.endDate);
 	let result = {};
@@ -213,6 +129,21 @@ try {
 	}
 
 	console.log({result})
+
+	function getPlayDuration(schedule) {
+		let sc_h_duration = {};
+		for (var h = 0; h < 24; h++) {
+			if(schedule[h]) {
+				for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
+					const slot = schedule[h][i] || [];
+					if (slot.length > 0) {
+						sc_h_duration[h] = _.sumBy(slot, 'duration')
+					}
+				}
+			}
+		}
+		return sc_h_duration;
+	}
 
 } catch(e) {
 	console.log(e.message)

@@ -9,14 +9,14 @@ const MAX_SLOT_AVIALABLE_HOUR_DURATION = 3600
 
 var data = {
     assets: {
-        "mediaId1": 50,
+        "mediaId1": 10,
         //"mediaId2": 150,
         //"mediaId3": 150,
     },
     startDate: "2018-10-21",
     endDate: "2018-10-23",
     hours: [1, 4, 5, 6],
-    frequency: 8
+    frequency: 3
 }
 const assetsLength = _.sum(Object.values(data.assets))
 
@@ -25,61 +25,96 @@ try {
         throw new Error("Assets length should not be greater than 360")
     }
     //let preSchedule = [];
-    let preSchedule = [
-        {
-            date: "2018-10-21",
-            play: {
-                4: { // hour
-                    1: [ // slot max duration 360 seconds
-                        {
-                            mediaId: "mediaId4",
-                            duration: 70
-                        }
-                    ],
-                    2: [
-                        {
-                            mediaId: "mediaId4",
-                            duration: 40
-                        }
-                    ],
-                    3: [
-                        {
-                            mediaId: "mediaId4",
-                            duration: 30
-                        }
-                    ]
-                },
-                5: {
-                    1: [
-                        {
-                            mediaId: "mediaId4",
-                            duration: 10
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            date: "2018-10-23",
-            play: {
-                6: {
-                    1: [
-                        {
-                            mediaId: "mediaId4",
-                            duration: 10
-                        }
-                    ]
-                }
-            }
-        }
-    ]
-    let formattedPreSchedule = {}
+    let preSchedule = [ // Retrieved this data based in schedule where screens in [1,2,3] and date between startDate & endDate
+		{
+			date: "2018-10-21",
+			screenId: 1,
+	        play: {
+		        4: { // hour
+		            1: [ // slot max duration 360 seconds
+		                {
+		                    mediaId: "mediaId4",
+		                    duration: 10
+		                },
+		                {
+		                    mediaId: "mediaId5",
+		                    duration: 300
+		                }
+		            ]
+		        },
+		        5: { // hour
+		            1: [ // slot max duration 360 seconds
+		                {
+		                    mediaId: "mediaId5",
+		                    duration: 70
+		                }
+		            ]
+		        }
+		    }
+		},
+		{
+			date: "2018-10-21",
+			screenId: 2,
+	        play: {
+				4: { // hour
+		            1: [ // slot max duration 360 seconds
+		                {
+		                    mediaId: "mediaId4",
+		                    duration: 20
+		                },
+		                {
+		                    mediaId: "mediaId5",
+		                    duration: 300
+		                }
+		            ]
+		        },
+	        	5: {
+	        		1: [ // slot max duration 360 seconds
+		                {
+		                    mediaId: "mediaId4",
+		                    duration: 60
+		                }
+		            ]
+	        	}
+	        }
+	    }
+	]
+    function regeneratePreSchedule (v) {
+		var preSc = {}
+		v.map(sc => {
+			const scPlay = {...sc.play}
+			if(preSc[sc.date]){
+				const dup = {...preSc[sc.date]};
+				const ks = _.uniq([...Object.keys(dup), ...Object.keys(sc.play)]);
+				ks.map(k => {
+					if(dup[k] && scPlay[k]) {
+						const dupDuration = getHourDuration(dup[k])
+						const sc_h_Duration = getHourDuration(scPlay[k])
+						scPlay[k] = dupDuration > sc_h_Duration ? {...dup[k]} : {...scPlay[k]};
+					} else if(!scPlay[k] && dup[k]) {
+						scPlay[k] = {...dup[k]}
+					}
+				})
+			}
+			preSc[sc.date] = scPlay    
+		})
+		return preSc;
+	}
+	
+	function getHourDuration(hour) {
+		let hour_duration = 0;
+		for (let i = 1; i <= MAX_SLOTS_IN_AN_HOUR; i++) {
+			const slot = hour[i] || [];
+			if (slot.length > 0) {
+				hour_duration  += _.sumBy(slot, 'duration')
+			}
+		}
+		return hour_duration;
+	}
+
+    let formattedPreSchedule = regeneratePreSchedule(preSchedule);
 
     let frequencyByDate = {}
-
-    preSchedule.map(ps => {
-        formattedPreSchedule[ps.date] = ps.play;
-    })
 
     let startDate = moment(data.startDate);
     let endDate = moment(data.endDate);
